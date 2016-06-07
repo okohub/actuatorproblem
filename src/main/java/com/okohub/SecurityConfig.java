@@ -3,7 +3,6 @@ package com.okohub;
 import java.util.Objects;
 import javax.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
@@ -23,10 +22,24 @@ import org.springframework.stereotype.Component;
  */
 @EnableWebSecurity
 @EnableGlobalMethodSecurity(securedEnabled = true)
-public class SecurityConfig {
+public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
    @Autowired
    UserDetailsService userDetailsService;
+
+   @Override
+   protected void configure(HttpSecurity http) throws Exception {
+      HttpSessionRequestCache requestCache = new HttpSessionRequestCache();
+      requestCache.setCreateSessionAllowed(false);
+      http
+          .antMatcher("/api/**").authorizeRequests().antMatchers("/api/hello", "/api/login").permitAll().anyRequest().authenticated()
+          .and()
+          .exceptionHandling().authenticationEntryPoint((request, response, authException) -> response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Authentication required!"))
+          .and()
+          .requestCache().requestCache(requestCache)
+          .and()
+          .csrf().disable().headers().xssProtection();
+   }
 
    @Autowired
    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
@@ -35,27 +48,8 @@ public class SecurityConfig {
       auth.authenticationProvider(daoAuthenticationProvider);
    }
 
-   @Configuration
-   public static class ApiWebSecurityConfigurationAdapter extends WebSecurityConfigurerAdapter {
-
-      @Override
-      protected void configure(HttpSecurity http) throws Exception {
-         HttpSessionRequestCache requestCache = new HttpSessionRequestCache();
-         requestCache.setCreateSessionAllowed(false);
-         http
-             .antMatcher("/api/**").authorizeRequests().antMatchers("/api/hello", "/api/login").permitAll().anyRequest().authenticated()
-             .and()
-             .exceptionHandling().authenticationEntryPoint((request, response, authException) -> response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Authentication required!"))
-             .and()
-             .requestCache().requestCache(requestCache)
-             .and()
-             .csrf().disable().headers().xssProtection();
-      }
-
-   }
-
    @Component
-   public class MyUserDetailsService implements UserDetailsService {
+   public static class MyUserDetailsService implements UserDetailsService {
 
       @Override
       public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {

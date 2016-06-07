@@ -3,7 +3,7 @@ package com.okohub;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.security.access.annotation.Secured;
-import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @SpringBootApplication
@@ -16,13 +16,13 @@ public class ActuatorproblemApplication {
    @RestController
    public static class HelloApi {
 
-      @GetMapping("api/hello")
+      @RequestMapping(value = "api/hello")
       public String hello() {
          return "hello";
       }
 
       @Secured(value = "ROLE_ADMIN")
-      @GetMapping("api/secure")
+      @RequestMapping(value = "api/secure")
       public String secure() {
          return "secure";
       }
